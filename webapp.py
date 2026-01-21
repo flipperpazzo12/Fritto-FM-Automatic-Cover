@@ -252,7 +252,7 @@ with c2:
 
 c3, c4 = st.columns(2)
 with c3:
-    time_slot = st.selectbox(T['time_label'], ["19.00", "20.00", "21.00"])
+    time_slot = st.selectbox(T['time_label'], ["19.00", "20.00"])
 
 with c4:
     artist_name = st.text_input(T['who_label'], placeholder=T['who_placeholder'])
