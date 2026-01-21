@@ -4,8 +4,9 @@ from PIL import Image, ImageDraw, ImageFont
 import datetime
 import os
 import io
+import base64
 
-# --- 1. CONFIGURAZIONE PAGINA E STATO ---
+# --- 1. CONFIGURAZIONE PAGINA ---
 st.set_page_config(
     page_title="Fritto FM Cover Generator",
     page_icon="🍟",
@@ -15,10 +16,17 @@ st.set_page_config(
 if 'lang' not in st.session_state:
     st.session_state.lang = 'IT'
 
-# --- 2. TRADUZIONI ---
+# --- 2. PERCORSI ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(BASE_DIR, "Template")
+FONT_PATH = os.path.join(BASE_DIR, "LTe50220.ttf")
+LOGO_PATH = os.path.join(BASE_DIR, "logo.png")
+
+# --- 3. TRADUZIONI ---
 TEXTS = {
     'IT': {
-        'title_desc': "**1. Dati -> 2. Foto -> 3. Scarica**",
+        'title': "Fritto FM Cover Generator",
+        'desc': "1. Dati → 2. Foto → 3. Scarica",
         'when_label': "📅 Che giorno?",
         'appears_as': "Apparirà come:",
         'where_label': "📍 Dove?",
@@ -37,7 +45,8 @@ TEXTS = {
         'info_upload': "👆 Carica una foto per sbloccare l'editor."
     },
     'EN': {
-        'title_desc': "**1. Data -> 2. Photo -> 3. Download**",
+        'title': "Fritto FM Cover Generator",
+        'desc': "1. Data → 2. Photo → 3. Download",
         'when_label': "📅 When? (Date)",
         'appears_as': "Will appear as:",
         'where_label': "📍 Where?",
@@ -56,56 +65,90 @@ TEXTS = {
         'info_upload': "👆 Upload a photo to unlock editor."
     }
 }
-
 T = TEXTS[st.session_state.lang]
 
-# --- 3. PERCORSI ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TEMPLATE_DIR = os.path.join(BASE_DIR, "Template")
-FONT_PATH = os.path.join(BASE_DIR, "LTe50220.ttf")
-LOGO_PATH = os.path.join(BASE_DIR, "logo.png")
+# --- 4. FONT CUSTOM ---
+def get_font_base64(path):
+    try:
+        with open(path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except:
+        return None
 
-# --- 4. CSS BRANDING ---
-st.markdown("""
+font_b64 = get_font_base64(FONT_PATH)
+font_face_css = ""
+if font_b64:
+    font_face_css = f"""
+    @font-face {{
+        font-family: 'FrittoBrand';
+        src: url('data:font/ttf;base64,{font_b64}') format('truetype');
+    }}
+    """
+
+# --- 5. CSS AVANZATO ---
+st.markdown(f"""
     <style>
-    .stApp { background-color: #0040e8; }
+    {font_face_css}
     
-    /* TITOLI E TESTI */
-    h1, h2, h3, h4, p, label, .stMarkdown, .stSelectbox label, .stDateInput label, .stTextInput label, .stCaption {
+    .stApp {{ background-color: #0040e8; }}
+    
+    /* FONT BRAND GIALLO */
+    h1, h2, h3, h4, p, label, .stMarkdown, .stSelectbox label, .stDateInput label, .stTextInput label, .stCaption {{
         color: #fbe219 !important;
-        font-family: 'Helvetica', sans-serif;
-    }
+        font-family: 'FrittoBrand', 'Helvetica', sans-serif !important;
+    }}
+    
+    /* TITOLO SU UNA RIGA */
+    .main-title {{
+        text-align: center;
+        font-size: 38px; /* Ridotto leggermente per sicurezza */
+        white-space: nowrap; /* FORZA UNA RIGA */
+        overflow: visible;
+        margin-bottom: 0px;
+        padding-bottom: 0px;
+        color: #fbe219;
+    }}
+    .sub-title {{
+        text-align: center;
+        font-size: 16px;
+        margin-top: 0px;
+        color: #fbe219;
+        font-family: 'Helvetica', sans-serif !important;
+    }}
     
     /* INPUT FIELDS */
-    .stTextInput input, .stSelectbox div[data-baseweb="select"] > div, .stDateInput input {
+    .stTextInput input, .stSelectbox div[data-baseweb="select"] > div, .stDateInput input {{
         background-color: white !important;
         color: black !important;
         border-radius: 5px;
         border: 2px solid #fbe219;
-    }
-
-    /* PLACEHOLDER & FILE NAMES (Grigio scuro per leggibilità) */
-    ::placeholder { color: #666666 !important; opacity: 1; }
-    [data-testid="stFileUploader"] div[data-testid="stFileUploaderFile"] div { color: #333333 !important; }
-    [data-testid="stFileUploader"] span { color: #333333 !important; }
-    [data-testid="stFileUploader"] small { color: #555555 !important; }
+    }}
+    ::placeholder {{ color: #555555 !important; opacity: 1; }}
     
-    /* FILE UPLOADER STYLE */
-    [data-testid="stFileUploader"] {
+    /* --- FILE UPLOADER (Fix Leggibilità) --- */
+    [data-testid="stFileUploader"] {{
         background-color: white;
         border: 2px dashed #fbe219;
         border-radius: 10px;
         padding: 20px;
-    }
-    [data-testid="stFileUploader"] section > div { color: #0040e8 !important; }
-    [data-testid="stFileUploader"] button {
+    }}
+    /* Forza NERO/BLU su tutti i testi dell'uploader */
+    [data-testid="stFileUploaderDropzone"] div, 
+    [data-testid="stFileUploaderDropzone"] span, 
+    [data-testid="stFileUploaderDropzone"] small {{
+        color: #0040e8 !important; /* Blu Fritto Scuro */
+        font-weight: bold !important;
+    }}
+    
+    [data-testid="stFileUploader"] button {{
         background-color: #0040e8 !important;
         color: white !important;
         border: none !important;
-    }
+    }}
     
-    /* TASTO CREA COVER */
-    div.stButton > button {
+    /* --- TASTO CREA COVER (Grande e Giallo) --- */
+    div.stButton > button {{
         background-color: #fbe219 !important;
         color: #0040e8 !important; 
         font-weight: 900 !important;
@@ -117,35 +160,46 @@ st.markdown("""
         border-radius: 10px;
         box-shadow: 0px 4px 0px #b8a612 !important;
         transition: all 0.2s ease-in-out;
-    }
-    div.stButton > button:hover {
+        font-family: 'FrittoBrand', sans-serif !important;
+    }}
+    div.stButton > button:hover {{
         background-color: #ffffff !important; 
         color: #0040e8 !important; 
         border-color: #fbe219 !important;
         transform: translateY(-2px);
         box-shadow: 0px 6px 0px #b8a612 !important;
-    }
-    div.stButton > button:active {
+    }}
+    div.stButton > button:active {{
         transform: translateY(2px);
         box-shadow: 0px 0px 0px #b8a612 !important;
-    }
-    div.stButton > button p { color: #0040e8 !important; }
-    
-    div[data-testid="column"] button {
-        background-color: transparent !important;
+    }}
+    div.stButton > button p {{ color: #0040e8 !important; }}
+
+    /* --- FIX BANDIERE (No Giallo, No Blocchi) --- */
+    /* Questo selettore colpisce SOLO i bottoni nella prima riga in alto */
+    div[data-testid="stHorizontalBlock"]:first-of-type button {{
+        background-color: transparent !important; /* Sfondo trasparente */
         border: none !important;
         box-shadow: none !important;
-        font-size: 25px !important;
-        padding: 0 !important;
-    }
+        padding: 0px !important;
+        margin: 0px 5px !important; /* Un po' di margine laterale */
+        font-size: 28px !important;
+        line-height: 1 !important;
+        min-height: 0px !important;
+        width: auto !important;
+    }}
+    div[data-testid="stHorizontalBlock"]:first-of-type button:hover {{
+        background-color: transparent !important;
+        transform: scale(1.2) !important; /* Effetto zoom */
+    }}
     
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    header {{visibility: hidden;}}
     </style>
     """, unsafe_allow_html=True)
 
-# --- 5. FUNZIONI ---
+# --- 6. FUNZIONI ---
 def get_english_date(d):
     days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     return f"{days[d.weekday()]}, {d.strftime('%d.%m.%y')}"
@@ -154,30 +208,34 @@ def wrap_text(text, font, max_chars=15):
     import textwrap
     return textwrap.wrap(text, width=max_chars)
 
-# --- 6. UI ---
-top_col1, top_col2, top_col3 = st.columns([1, 3, 1])
+# --- 7. HEADER (Layout Preciso) ---
+# [Logo] [Titolo Largo] [Bandiere Strette]
+c_left, c_center, c_right = st.columns([1, 5, 1.2])
 
-with top_col1:
+with c_left:
     if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, width=100)
+        st.image(LOGO_PATH, width=90)
 
-with top_col2:
-    st.title("Fritto FM Cover Generator")
-    st.markdown(T['title_desc'])
+with c_center:
+    # Titolo HTML
+    st.markdown(f"<h1 class='main-title'>{T['title']}</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p class='sub-title'><b>{T['desc']}</b></p>", unsafe_allow_html=True)
 
-with top_col3:
-    col_it, col_uk = st.columns(2)
-    with col_it:
-        if st.button("🇮🇹"):
+with c_right:
+    # Bandiere vicine
+    f1, f2 = st.columns([1, 1])
+    with f1:
+        if st.button("🇮🇹", key="it_btn"):
             st.session_state.lang = 'IT'
             st.rerun()
-    with col_uk:
-        if st.button("🇬🇧"):
+    with f2:
+        if st.button("🇬🇧", key="en_btn"):
             st.session_state.lang = 'EN'
             st.rerun()
 
 st.markdown("---")
 
+# --- 8. FORM ---
 c1, c2 = st.columns(2)
 with c1:
     d = st.date_input(T['when_label'], datetime.date.today())
@@ -210,22 +268,17 @@ if uploaded_file and artist_name:
     
     if os.path.exists(template_path):
         template = Image.open(template_path).convert("RGBA")
-        # Qui prendiamo le dimensioni reali (es. 2000x2000)
         W_tmpl, H_tmpl = template.size
         
         st.info(T['crop_info'])
         img_source = Image.open(uploaded_file).convert("RGBA")
         
-        # --- CROPPER CORRETTO ---
-        # 1. aspect_ratio=(1, 1) -> Forza un quadrato perfetto.
-        # 2. Dato che il template è 2000x2000 (Quadrato), Quadrato su Quadrato = NESSUNA DEFORMAZIONE.
-        # 3. La libreria gestisce i bordi: il box non può uscire dall'immagine.
-        
+        # --- CROPPER (QUADRATO) ---
         cropped_img = st_cropper(
             img_source,
             realtime_update=True,
             box_color='#fbe219',
-            aspect_ratio=(1, 1), # QUADRATO
+            aspect_ratio=(1, 1), 
             should_resize_image=True
         )
 
@@ -234,8 +287,7 @@ if uploaded_file and artist_name:
         if st.button(T['btn_generate']):
             with st.spinner(T['spinner']):
                 
-                # Resize finale: Il ritaglio è quadrato -> Il template è quadrato.
-                # Questa operazione è uno ZOOM (Scaling), non uno STRETCH.
+                # Resize finale
                 img_fitted = cropped_img.resize((W_tmpl, H_tmpl), Image.LANCZOS)
                 
                 canvas = Image.new("RGBA", (W_tmpl, H_tmpl))
@@ -248,8 +300,6 @@ if uploaded_file and artist_name:
                 except:
                     font = ImageFont.load_default()
                 
-                # Coordinate del testo (tieni quelle vecchie se il posizionamento verticale è lo stesso,
-                # oppure aggiusta Y_POS se il template 2000x2000 ha il footer più in basso/alto)
                 Y_POS = 1868
                 PADDING = 25
                 
