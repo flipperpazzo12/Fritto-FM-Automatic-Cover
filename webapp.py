@@ -86,7 +86,7 @@ if font_b64:
     }}
     """
 
-# --- 5. CSS AVANZATO ---
+# --- 5. CSS AVANZATO (BRANDING & UI FIX) ---
 st.markdown(f"""
     <style>
     {font_face_css}
@@ -102,8 +102,8 @@ st.markdown(f"""
     /* TITOLO SU UNA RIGA */
     .main-title {{
         text-align: center;
-        font-size: 38px; /* Ridotto leggermente per sicurezza */
-        white-space: nowrap; /* FORZA UNA RIGA */
+        font-size: 38px;
+        white-space: nowrap;
         overflow: visible;
         margin-bottom: 0px;
         padding-bottom: 0px;
@@ -126,28 +126,26 @@ st.markdown(f"""
     }}
     ::placeholder {{ color: #555555 !important; opacity: 1; }}
     
-    /* --- FILE UPLOADER (Fix Leggibilità) --- */
+    /* FILE UPLOADER (Testi Scuri) */
     [data-testid="stFileUploader"] {{
         background-color: white;
         border: 2px dashed #fbe219;
         border-radius: 10px;
         padding: 20px;
     }}
-    /* Forza NERO/BLU su tutti i testi dell'uploader */
     [data-testid="stFileUploaderDropzone"] div, 
     [data-testid="stFileUploaderDropzone"] span, 
     [data-testid="stFileUploaderDropzone"] small {{
         color: #0040e8 !important; /* Blu Fritto Scuro */
         font-weight: bold !important;
     }}
-    
     [data-testid="stFileUploader"] button {{
         background-color: #0040e8 !important;
         color: white !important;
         border: none !important;
     }}
     
-    /* --- TASTO CREA COVER (Grande e Giallo) --- */
+    /* TASTO CREA COVER */
     div.stButton > button {{
         background-color: #fbe219 !important;
         color: #0040e8 !important; 
@@ -175,14 +173,13 @@ st.markdown(f"""
     }}
     div.stButton > button p {{ color: #0040e8 !important; }}
 
-    /* --- FIX BANDIERE (No Giallo, No Blocchi) --- */
-    /* Questo selettore colpisce SOLO i bottoni nella prima riga in alto */
+    /* FIX BANDIERE TRASPARENTI */
     div[data-testid="stHorizontalBlock"]:first-of-type button {{
-        background-color: transparent !important; /* Sfondo trasparente */
+        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0px !important;
-        margin: 0px 5px !important; /* Un po' di margine laterale */
+        margin: 0px 5px !important;
         font-size: 28px !important;
         line-height: 1 !important;
         min-height: 0px !important;
@@ -190,7 +187,7 @@ st.markdown(f"""
     }}
     div[data-testid="stHorizontalBlock"]:first-of-type button:hover {{
         background-color: transparent !important;
-        transform: scale(1.2) !important; /* Effetto zoom */
+        transform: scale(1.2) !important;
     }}
     
     #MainMenu {{visibility: hidden;}}
@@ -208,8 +205,7 @@ def wrap_text(text, font, max_chars=15):
     import textwrap
     return textwrap.wrap(text, width=max_chars)
 
-# --- 7. HEADER (Layout Preciso) ---
-# [Logo] [Titolo Largo] [Bandiere Strette]
+# --- 7. HEADER (Layout) ---
 c_left, c_center, c_right = st.columns([1, 5, 1.2])
 
 with c_left:
@@ -217,12 +213,10 @@ with c_left:
         st.image(LOGO_PATH, width=90)
 
 with c_center:
-    # Titolo HTML
     st.markdown(f"<h1 class='main-title'>{T['title']}</h1>", unsafe_allow_html=True)
     st.markdown(f"<p class='sub-title'><b>{T['desc']}</b></p>", unsafe_allow_html=True)
 
 with c_right:
-    # Bandiere vicine
     f1, f2 = st.columns([1, 1])
     with f1:
         if st.button("🇮🇹", key="it_btn"):
@@ -235,7 +229,7 @@ with c_right:
 
 st.markdown("---")
 
-# --- 8. FORM ---
+# --- 8. FORM DATI ---
 c1, c2 = st.columns(2)
 with c1:
     d = st.date_input(T['when_label'], datetime.date.today())
@@ -252,7 +246,9 @@ with c2:
 
 c3, c4 = st.columns(2)
 with c3:
-    time_slot = st.selectbox(T['time_label'], ["19.00", "20.00"])
+    # GENERAZIONE AUTOMATICA ORARI DALLE 10.00 ALLE 24.00
+    times_list = [f"{h}.00" for h in range(10, 25)] # Genera 10.00, 11.00 ... 24.00
+    time_slot = st.selectbox(T['time_label'], times_list)
 
 with c4:
     artist_name = st.text_input(T['who_label'], placeholder=T['who_placeholder'])
@@ -263,7 +259,7 @@ st.subheader(T['photo_header'])
 uploaded_file = st.file_uploader(label=T['upload_label'], type=['jpg', 'png', 'jpeg'], label_visibility="collapsed")
 
 if uploaded_file and artist_name:
-    template_name = f"{time_slot[:2]}.png"
+    template_name = f"{time_slot[:2]}.png" # Prende "10" da "10.00", "24" da "24.00"
     template_path = os.path.join(TEMPLATE_DIR, template_name)
     
     if os.path.exists(template_path):
@@ -331,7 +327,7 @@ if uploaded_file and artist_name:
                     mime="image/jpeg"
                 )
     else:
-        st.error(T['error_template'])
+        st.error(f"{T['error_template']} (Cercavo: {template_name})")
 
 elif not uploaded_file:
     st.info(T['info_upload'])
