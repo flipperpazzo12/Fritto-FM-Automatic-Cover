@@ -33,7 +33,7 @@ TEXTS = {
         'other_city': "Scrivi città:",
         'time_label': "⏰ A che ora?",
         'who_label': "Chi?",
-        'who_placeholder': "Es. Dj Fritto",
+        'who_placeholder': "Es. DJ Fritto",
         'photo_header': "📸 Carica foto",
         'upload_label': "Carica la tua foto",
         'crop_info': "💡 Seleziona l'area. Il formato è fisso (Quadrato).",
@@ -53,7 +53,7 @@ TEXTS = {
         'other_city': "Type city:",
         'time_label': "⏰ What time? (CET)",
         'who_label': "😎 Who?",
-        'who_placeholder': "E.g. Mat",
+        'who_placeholder': "E.g. DJ Fritto",
         'photo_header': "📸 Upload your photo",
         'upload_label': "Upload your photo",
         'crop_info': "💡 Select area. Aspect ratio is locked (Square).",
@@ -86,7 +86,7 @@ if font_b64:
     }}
     """
 
-# --- 5. CSS AVANZATO (BRANDING & UI FIX) ---
+# --- 5. CSS AVANZATO ---
 st.markdown(f"""
     <style>
     {font_face_css}
@@ -237,17 +237,22 @@ with c1:
     st.caption(f"{T['appears_as']} {formatted_date}")
 
 with c2:
-    locations = ["Milan, IT", "London, UK", "Berlin, DE", "Paris, FR", "New York, US", "Tokyo, JP", "Altro..."]
+    # AGGIUNTO IL DEFAULT NELLA STRINGA
+    locations = ["Milan, IT (Default)", "London, UK", "Berlin, DE", "Paris, FR", "New York, US", "Tokyo, JP", "Altro..."]
     loc_choice = st.selectbox(T['where_label'], locations)
+    
+    # LOGICA PER PULIRE LA STRINGA "DEFAULT"
     if loc_choice == "Altro...": 
         location = st.text_input(T['other_city'], "Rome, IT")
+    elif "Default" in loc_choice:
+        location = "Milan, IT" # Pulisce la scritta per la stampa
     else: 
         location = loc_choice
 
 c3, c4 = st.columns(2)
 with c3:
-    # GENERAZIONE AUTOMATICA ORARI DALLE 10.00 ALLE 24.00
-    times_list = [f"{h}.00" for h in range(10, 25)] # Genera 10.00, 11.00 ... 24.00
+    # ORARI COMPLETI 10-24
+    times_list = [f"{h}.00" for h in range(10, 25)]
     time_slot = st.selectbox(T['time_label'], times_list)
 
 with c4:
@@ -259,7 +264,7 @@ st.subheader(T['photo_header'])
 uploaded_file = st.file_uploader(label=T['upload_label'], type=['jpg', 'png', 'jpeg'], label_visibility="collapsed")
 
 if uploaded_file and artist_name:
-    template_name = f"{time_slot[:2]}.png" # Prende "10" da "10.00", "24" da "24.00"
+    template_name = f"{time_slot[:2]}.png"
     template_path = os.path.join(TEMPLATE_DIR, template_name)
     
     if os.path.exists(template_path):
