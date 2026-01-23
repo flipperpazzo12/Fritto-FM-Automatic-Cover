@@ -237,21 +237,18 @@ with c1:
     st.caption(f"{T['appears_as']} {formatted_date}")
 
 with c2:
-    # AGGIUNTO IL DEFAULT NELLA STRINGA
     locations = ["Milan, IT (Default)", "London, UK", "Berlin, DE", "Paris, FR", "New York, US", "Tokyo, JP", "Altro..."]
     loc_choice = st.selectbox(T['where_label'], locations)
     
-    # LOGICA PER PULIRE LA STRINGA "DEFAULT"
     if loc_choice == "Altro...": 
         location = st.text_input(T['other_city'], "Rome, IT")
     elif "Default" in loc_choice:
-        location = "Milan, IT" # Pulisce la scritta per la stampa
+        location = "Milan, IT"
     else: 
         location = loc_choice
 
 c3, c4 = st.columns(2)
 with c3:
-    # ORARI COMPLETI 10-24
     times_list = [f"{h}.00" for h in range(10, 25)]
     time_slot = st.selectbox(T['time_label'], times_list)
 
@@ -317,6 +314,10 @@ if uploaded_file and artist_name:
                 draw.text((1441 + PADDING, Y_POS), formatted_date, font=font, fill="white", anchor="lm")
                 
                 final_rgb = canvas.convert("RGB")
+                
+                # --- EFFETTO WOW (PUNTO 1) ---
+                st.balloons()
+                
                 st.image(final_rgb, caption=T['success_caption'], width=400)
                 
                 buf = io.BytesIO()
