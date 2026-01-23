@@ -88,7 +88,7 @@ if font_b64:
     }}
     """
 
-# --- 5. CSS AVANZATO ---
+# --- 5. CSS FIX (UI & BRANDING) ---
 st.markdown(f"""
     <style>
     {font_face_css}
@@ -101,11 +101,11 @@ st.markdown(f"""
         font-family: 'FrittoBrand', 'Helvetica', sans-serif !important;
     }}
     
-    /* TITOLO SU UNA RIGA */
+    /* TITOLO SU UNA RIGA (Ridotto per stare nei bordi) */
     .main-title {{
         text-align: center;
-        font-size: 38px;
-        white-space: nowrap;
+        font-size: 32px; /* Ridotto da 38px a 32px */
+        white-space: nowrap; /* FORZA UNA RIGA */
         overflow: visible;
         margin-bottom: 0px;
         padding-bottom: 0px;
@@ -113,13 +113,13 @@ st.markdown(f"""
     }}
     .sub-title {{
         text-align: center;
-        font-size: 16px;
+        font-size: 14px;
         margin-top: 0px;
         color: #fbe219;
         font-family: 'Helvetica', sans-serif !important;
     }}
     
-    /* INPUT FIELDS */
+    /* INPUT FIELDS (Bianchi) */
     .stTextInput input, .stSelectbox div[data-baseweb="select"] > div, .stDateInput input {{
         background-color: white !important;
         color: black !important;
@@ -128,19 +128,28 @@ st.markdown(f"""
     }}
     ::placeholder {{ color: #555555 !important; opacity: 1; }}
     
-    /* FILE UPLOADER */
+    /* --- FILE UPLOADER STYLE (FIX COLORI & DARK MODE) --- */
     [data-testid="stFileUploader"] {{
-        background-color: white;
+        background-color: white !important; /* Forza sfondo BIANCO */
         border: 2px dashed #fbe219;
         border-radius: 10px;
         padding: 20px;
     }}
-    [data-testid="stFileUploaderDropzone"] div, 
-    [data-testid="stFileUploaderDropzone"] span, 
-    [data-testid="stFileUploaderDropzone"] small {{
-        color: #0040e8 !important;
-        font-weight: bold !important;
+    
+    /* Testo "Drag and drop..." -> GRIGIO SCURO */
+    [data-testid="stFileUploader"] section > div {{
+        color: #666666 !important; 
+        font-weight: normal !important;
     }}
+    /* Testo piccolo "Limit 200MB..." -> GRIGIO SCURO */
+    [data-testid="stFileUploader"] small {{
+        color: #666666 !important;
+    }}
+    /* Icona Upload -> GRIGIO */
+    [data-testid="stFileUploader"] span {{
+        color: #666666 !important;
+    }}
+    /* Tasto "Browse files" -> BLU */
     [data-testid="stFileUploader"] button {{
         background-color: #0040e8 !important;
         color: white !important;
@@ -150,16 +159,16 @@ st.markdown(f"""
     /* ERROR BOX STYLE */
     .stAlert {{
         background-color: white !important;
-        color: #ff2b2b !important; /* Rosso errore */
+        color: #ff2b2b !important;
         border: 2px solid #ff2b2b !important;
         border-radius: 10px;
         font-weight: bold;
     }}
     
-    /* TASTO CREA COVER */
+    /* --- TASTO CREA COVER (Visibile!) --- */
     div.stButton > button {{
-        background-color: #fbe219 !important;
-        color: #0040e8 !important; 
+        background-color: #fbe219 !important; /* Giallo Pieno */
+        color: #0040e8 !important;           /* Testo Blu */
         font-weight: 900 !important;
         border: 3px solid #fbe219 !important;
         padding: 0.8rem 2rem;
@@ -182,23 +191,25 @@ st.markdown(f"""
         transform: translateY(2px);
         box-shadow: 0px 0px 0px #b8a612 !important;
     }}
+    /* Fix per il testo interno del bottone */
     div.stButton > button p {{ color: #0040e8 !important; }}
 
-    /* FIX BANDIERE */
-    div[data-testid="stHorizontalBlock"]:first-of-type button {{
+    /* --- FIX BANDIERE (Trasparenti e Separate) --- */
+    /* Targettiamo i bottoni nella colonna di destra */
+    [data-testid="column"]:nth-of-type(3) button {{
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0px !important;
-        margin: 0px 5px !important;
-        font-size: 28px !important;
-        line-height: 1 !important;
-        min-height: 0px !important;
-        width: auto !important;
+        font-size: 26px !important; /* Più piccole */
+        margin-top: 5px !important;
     }}
-    div[data-testid="stHorizontalBlock"]:first-of-type button:hover {{
-        background-color: transparent !important;
+    [data-testid="column"]:nth-of-type(3) button:hover {{
         transform: scale(1.2) !important;
+    }}
+    [data-testid="column"]:nth-of-type(3) button:focus {{
+        outline: none !important;
+        border: none !important;
     }}
     
     #MainMenu {{visibility: hidden;}}
@@ -216,8 +227,10 @@ def wrap_text(text, font, max_chars=15):
     import textwrap
     return textwrap.wrap(text, width=max_chars)
 
-# --- 7. HEADER (Layout) ---
-c_left, c_center, c_right = st.columns([1, 5, 1.2])
+# --- 7. HEADER (Layout Migliorato) ---
+# Colonne: [Logo] [Titolo] [Bandiere]
+# Bandiere ha width 1.5 per dare spazio
+c_left, c_center, c_right = st.columns([1, 5, 1.5])
 
 with c_left:
     if os.path.exists(LOGO_PATH):
@@ -228,12 +241,14 @@ with c_center:
     st.markdown(f"<p class='sub-title'><b>{T['desc']}</b></p>", unsafe_allow_html=True)
 
 with c_right:
-    f1, f2 = st.columns([1, 1])
+    # Sotto-colonne per separare le bandiere
+    # [Spazio vuoto] [Bandiera IT] [Spazio] [Bandiera UK]
+    f0, f1, f2, f3 = st.columns([0.2, 1, 0.2, 1])
     with f1:
         if st.button("🇮🇹", key="it_btn"):
             st.session_state.lang = 'IT'
             st.rerun()
-    with f2:
+    with f3:
         if st.button("🇬🇧", key="en_btn"):
             st.session_state.lang = 'EN'
             st.rerun()
@@ -271,7 +286,6 @@ st.subheader(T['photo_header'])
 
 uploaded_file = st.file_uploader(label=T['upload_label'], type=['jpg', 'png', 'jpeg'], label_visibility="collapsed")
 
-# MODIFICA: Mostriamo l'editor SE c'è il file, indipendentemente dal nome
 if uploaded_file:
     template_name = f"{time_slot[:2]}.png"
     template_path = os.path.join(TEMPLATE_DIR, template_name)
@@ -295,7 +309,6 @@ if uploaded_file:
         st.markdown("---")
 
         if st.button(T['btn_generate']):
-            # --- VALIDAZIONE ERRORI ---
             if not artist_name or artist_name.strip() == "":
                 st.error(T['error_missing_name'])
             else:
@@ -331,9 +344,7 @@ if uploaded_file:
                     
                     final_rgb = canvas.convert("RGB")
                     
-                    # --- EFFETTO WOW ---
                     st.balloons()
-                    
                     st.image(final_rgb, caption=T['success_caption'], width=400)
                     
                     buf = io.BytesIO()
