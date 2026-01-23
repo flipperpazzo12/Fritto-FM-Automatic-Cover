@@ -101,15 +101,16 @@ st.markdown(f"""
         font-family: 'FrittoBrand', 'Helvetica', sans-serif !important;
     }}
     
-    /* TITOLO SU UNA RIGA (Ridotto per stare nei bordi) */
+    /* TITOLO SU UNA RIGA (Ridotto a 28px per evitare sovrapposizioni) */
     .main-title {{
         text-align: center;
-        font-size: 32px; /* Ridotto da 38px a 32px */
-        white-space: nowrap; /* FORZA UNA RIGA */
+        font-size: 28px; /* RIDOTTO PER SICUREZZA */
+        white-space: nowrap; 
         overflow: visible;
         margin-bottom: 0px;
         padding-bottom: 0px;
         color: #fbe219;
+        line-height: 1.5;
     }}
     .sub-title {{
         text-align: center;
@@ -128,27 +129,26 @@ st.markdown(f"""
     }}
     ::placeholder {{ color: #555555 !important; opacity: 1; }}
     
-    /* --- FILE UPLOADER STYLE (FIX COLORI & DARK MODE) --- */
+    /* --- FILE UPLOADER STYLE (TESTO NERO) --- */
     [data-testid="stFileUploader"] {{
-        background-color: white !important; /* Forza sfondo BIANCO */
+        background-color: white !important;
         border: 2px dashed #fbe219;
         border-radius: 10px;
         padding: 20px;
     }}
     
-    /* Testo "Drag and drop..." -> GRIGIO SCURO */
-    [data-testid="stFileUploader"] section > div {{
-        color: #666666 !important; 
+    /* TUTTI i testi dentro l'uploader -> NERI (#000000) */
+    [data-testid="stFileUploader"] section > div, 
+    [data-testid="stFileUploader"] small, 
+    [data-testid="stFileUploader"] span {{
+        color: #000000 !important; /* NERO ASSOLUTO */
         font-weight: normal !important;
     }}
-    /* Testo piccolo "Limit 200MB..." -> GRIGIO SCURO */
-    [data-testid="stFileUploader"] small {{
-        color: #666666 !important;
+    /* Nome file caricato */
+    [data-testid="stFileUploaderFile"] div {{
+        color: #000000 !important;
     }}
-    /* Icona Upload -> GRIGIO */
-    [data-testid="stFileUploader"] span {{
-        color: #666666 !important;
-    }}
+    
     /* Tasto "Browse files" -> BLU */
     [data-testid="stFileUploader"] button {{
         background-color: #0040e8 !important;
@@ -165,10 +165,10 @@ st.markdown(f"""
         font-weight: bold;
     }}
     
-    /* --- TASTO CREA COVER (Visibile!) --- */
+    /* --- TASTO CREA COVER --- */
     div.stButton > button {{
-        background-color: #fbe219 !important; /* Giallo Pieno */
-        color: #0040e8 !important;           /* Testo Blu */
+        background-color: #fbe219 !important;
+        color: #0040e8 !important;           
         font-weight: 900 !important;
         border: 3px solid #fbe219 !important;
         padding: 0.8rem 2rem;
@@ -191,25 +191,19 @@ st.markdown(f"""
         transform: translateY(2px);
         box-shadow: 0px 0px 0px #b8a612 !important;
     }}
-    /* Fix per il testo interno del bottone */
     div.stButton > button p {{ color: #0040e8 !important; }}
 
-    /* --- FIX BANDIERE (Trasparenti e Separate) --- */
-    /* Targettiamo i bottoni nella colonna di destra */
+    /* --- FIX BANDIERE (Spazio e Dimensione) --- */
     [data-testid="column"]:nth-of-type(3) button {{
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0px !important;
-        font-size: 26px !important; /* Più piccole */
+        font-size: 26px !important; 
         margin-top: 5px !important;
     }}
     [data-testid="column"]:nth-of-type(3) button:hover {{
         transform: scale(1.2) !important;
-    }}
-    [data-testid="column"]:nth-of-type(3) button:focus {{
-        outline: none !important;
-        border: none !important;
     }}
     
     #MainMenu {{visibility: hidden;}}
@@ -227,10 +221,9 @@ def wrap_text(text, font, max_chars=15):
     import textwrap
     return textwrap.wrap(text, width=max_chars)
 
-# --- 7. HEADER (Layout Migliorato) ---
-# Colonne: [Logo] [Titolo] [Bandiere]
-# Bandiere ha width 1.5 per dare spazio
-c_left, c_center, c_right = st.columns([1, 5, 1.5])
+# --- 7. HEADER (Layout Anti-Sovrapposizione) ---
+# Colonne: [Logo 1] [Spazio Grande 8] [Bandiere 1]
+c_left, c_center, c_right = st.columns([1, 8, 1])
 
 with c_left:
     if os.path.exists(LOGO_PATH):
@@ -241,14 +234,13 @@ with c_center:
     st.markdown(f"<p class='sub-title'><b>{T['desc']}</b></p>", unsafe_allow_html=True)
 
 with c_right:
-    # Sotto-colonne per separare le bandiere
-    # [Spazio vuoto] [Bandiera IT] [Spazio] [Bandiera UK]
-    f0, f1, f2, f3 = st.columns([0.2, 1, 0.2, 1])
+    # Bandiere vicine ma separate
+    f1, f2 = st.columns([1, 1])
     with f1:
         if st.button("🇮🇹", key="it_btn"):
             st.session_state.lang = 'IT'
             st.rerun()
-    with f3:
+    with f2:
         if st.button("🇬🇧", key="en_btn"):
             st.session_state.lang = 'EN'
             st.rerun()
