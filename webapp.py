@@ -42,6 +42,7 @@ TEXTS = {
         'spinner': "Friggendo pixels... 🍟",
         'success_caption': "Ecco la cover pronta",
         'error_template': "⚠️ Errore: Manca il template!",
+        'error_missing_name': "⛔️ Devi scrivere il NOME dell'artista!",
         'info_upload': "👆 Carica una foto per sbloccare l'editor."
     },
     'EN': {
@@ -62,6 +63,7 @@ TEXTS = {
         'spinner': "Frying pixels... 🍟",
         'success_caption': "Cover ready!",
         'error_template': "⚠️ Error: Template missing!",
+        'error_missing_name': "⛔️ You must enter the artist NAME!",
         'info_upload': "👆 Upload a photo to unlock editor."
     }
 }
@@ -94,7 +96,7 @@ st.markdown(f"""
     .stApp {{ background-color: #0040e8; }}
     
     /* FONT BRAND GIALLO */
-    h1, h2, h3, h4, p, label, .stMarkdown, .stSelectbox label, .stDateInput label, .stTextInput label, .stCaption {{
+    h1, h2, h3, h4, p, label, .stMarkdown, .stSelectbox label, .stDateInput label, .stTextInput label, .stCaption, .stAlert {{
         color: #fbe219 !important;
         font-family: 'FrittoBrand', 'Helvetica', sans-serif !important;
     }}
@@ -126,7 +128,7 @@ st.markdown(f"""
     }}
     ::placeholder {{ color: #555555 !important; opacity: 1; }}
     
-    /* FILE UPLOADER (Testi Scuri) */
+    /* FILE UPLOADER */
     [data-testid="stFileUploader"] {{
         background-color: white;
         border: 2px dashed #fbe219;
@@ -136,13 +138,22 @@ st.markdown(f"""
     [data-testid="stFileUploaderDropzone"] div, 
     [data-testid="stFileUploaderDropzone"] span, 
     [data-testid="stFileUploaderDropzone"] small {{
-        color: #0040e8 !important; /* Blu Fritto Scuro */
+        color: #0040e8 !important;
         font-weight: bold !important;
     }}
     [data-testid="stFileUploader"] button {{
         background-color: #0040e8 !important;
         color: white !important;
         border: none !important;
+    }}
+    
+    /* ERROR BOX STYLE */
+    .stAlert {{
+        background-color: white !important;
+        color: #ff2b2b !important; /* Rosso errore */
+        border: 2px solid #ff2b2b !important;
+        border-radius: 10px;
+        font-weight: bold;
     }}
     
     /* TASTO CREA COVER */
@@ -173,7 +184,7 @@ st.markdown(f"""
     }}
     div.stButton > button p {{ color: #0040e8 !important; }}
 
-    /* FIX BANDIERE TRASPARENTI */
+    /* FIX BANDIERE */
     div[data-testid="stHorizontalBlock"]:first-of-type button {{
         background-color: transparent !important;
         border: none !important;
@@ -260,7 +271,8 @@ st.subheader(T['photo_header'])
 
 uploaded_file = st.file_uploader(label=T['upload_label'], type=['jpg', 'png', 'jpeg'], label_visibility="collapsed")
 
-if uploaded_file and artist_name:
+# MODIFICA: Mostriamo l'editor SE c'è il file, indipendentemente dal nome
+if uploaded_file:
     template_name = f"{time_slot[:2]}.png"
     template_path = os.path.join(TEMPLATE_DIR, template_name)
     
@@ -283,55 +295,59 @@ if uploaded_file and artist_name:
         st.markdown("---")
 
         if st.button(T['btn_generate']):
-            with st.spinner(T['spinner']):
-                
-                # Resize finale
-                img_fitted = cropped_img.resize((W_tmpl, H_tmpl), Image.LANCZOS)
-                
-                canvas = Image.new("RGBA", (W_tmpl, H_tmpl))
-                canvas.paste(img_fitted, (0, 0))
-                canvas.alpha_composite(template)
-                
-                draw = ImageDraw.Draw(canvas)
-                try:
-                    font = ImageFont.truetype(FONT_PATH, 33)
-                except:
-                    font = ImageFont.load_default()
-                
-                Y_POS = 1868
-                PADDING = 25
-                
-                lines = wrap_text(artist_name, font, 15)
-                ascent, descent = font.getmetrics()
-                lh = ascent + descent + 5
-                cy = Y_POS - (len(lines) * lh / 2)
-                
-                for line in lines:
-                    draw.text((200 + PADDING, cy), line, font=font, fill="white")
-                    cy += lh
-                
-                draw.text((833 + PADDING, Y_POS), location, font=font, fill="white", anchor="lm")
-                draw.text((1441 + PADDING, Y_POS), formatted_date, font=font, fill="white", anchor="lm")
-                
-                final_rgb = canvas.convert("RGB")
-                
-                # --- EFFETTO WOW (PUNTO 1) ---
-                st.balloons()
-                
-                st.image(final_rgb, caption=T['success_caption'], width=400)
-                
-                buf = io.BytesIO()
-                final_rgb.save(buf, format="JPEG", quality=95)
-                byte_im = buf.getvalue()
-                
-                filename = f"{time_slot.replace(':','')}_{artist_name}.jpg"
-                
-                st.download_button(
-                    label=T['btn_download'],
-                    data=byte_im,
-                    file_name=filename,
-                    mime="image/jpeg"
-                )
+            # --- VALIDAZIONE ERRORI ---
+            if not artist_name or artist_name.strip() == "":
+                st.error(T['error_missing_name'])
+            else:
+                with st.spinner(T['spinner']):
+                    
+                    # Resize finale
+                    img_fitted = cropped_img.resize((W_tmpl, H_tmpl), Image.LANCZOS)
+                    
+                    canvas = Image.new("RGBA", (W_tmpl, H_tmpl))
+                    canvas.paste(img_fitted, (0, 0))
+                    canvas.alpha_composite(template)
+                    
+                    draw = ImageDraw.Draw(canvas)
+                    try:
+                        font = ImageFont.truetype(FONT_PATH, 33)
+                    except:
+                        font = ImageFont.load_default()
+                    
+                    Y_POS = 1868
+                    PADDING = 25
+                    
+                    lines = wrap_text(artist_name, font, 15)
+                    ascent, descent = font.getmetrics()
+                    lh = ascent + descent + 5
+                    cy = Y_POS - (len(lines) * lh / 2)
+                    
+                    for line in lines:
+                        draw.text((200 + PADDING, cy), line, font=font, fill="white")
+                        cy += lh
+                    
+                    draw.text((833 + PADDING, Y_POS), location, font=font, fill="white", anchor="lm")
+                    draw.text((1441 + PADDING, Y_POS), formatted_date, font=font, fill="white", anchor="lm")
+                    
+                    final_rgb = canvas.convert("RGB")
+                    
+                    # --- EFFETTO WOW ---
+                    st.balloons()
+                    
+                    st.image(final_rgb, caption=T['success_caption'], width=400)
+                    
+                    buf = io.BytesIO()
+                    final_rgb.save(buf, format="JPEG", quality=95)
+                    byte_im = buf.getvalue()
+                    
+                    filename = f"{time_slot.replace(':','')}_{artist_name}.jpg"
+                    
+                    st.download_button(
+                        label=T['btn_download'],
+                        data=byte_im,
+                        file_name=filename,
+                        mime="image/jpeg"
+                    )
     else:
         st.error(f"{T['error_template']} (Cercavo: {template_name})")
 
