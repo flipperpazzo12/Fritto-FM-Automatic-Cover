@@ -88,34 +88,44 @@ if font_b64:
     }}
     """
 
-# --- 5. CSS FIX (UI & BRANDING) ---
+# --- 5. CSS CHIRURGICO ---
 st.markdown(f"""
     <style>
     {font_face_css}
     
     .stApp {{ background-color: #0040e8; }}
     
-    /* FONT BRAND GIALLO */
-    h1, h2, h3, h4, p, label, .stMarkdown, .stSelectbox label, .stDateInput label, .stTextInput label, .stCaption, .stAlert {{
+    /* FONT BRAND GIALLO (ESCLUSO stAlert/stInfo) */
+    h1, h2, h3, h4, p, label, .stMarkdown, .stSelectbox label, .stDateInput label, .stTextInput label, .stCaption {{
         color: #fbe219 !important;
         font-family: 'FrittoBrand', 'Helvetica', sans-serif !important;
     }}
     
-    /* TITOLO SU UNA RIGA (Ridotto a 28px per evitare sovrapposizioni) */
+    /* --- FIX BOX INFORMATIVO (st.info) --- */
+    /* Questo risolve il problema della scritta gialla illegibile su sfondo chiaro */
+    .stAlert {{
+        color: #0040e8 !important; /* BLU SCURO, non giallo */
+        background-color: #e6f0ff !important; /* Sfondo chiaro standard */
+        border: 1px solid #0040e8 !important;
+        font-family: 'FrittoBrand', sans-serif !important;
+    }}
+    /* Icone dentro gli alert */
+    .stAlert div[data-testid="stMarkdownContainer"] p {{
+        color: #0040e8 !important;
+    }}
+
+    /* TITOLO SU UNA RIGA */
     .main-title {{
         text-align: center;
-        font-size: 28px; /* RIDOTTO PER SICUREZZA */
+        font-size: 35px;
         white-space: nowrap; 
-        overflow: visible;
         margin-bottom: 0px;
-        padding-bottom: 0px;
         color: #fbe219;
-        line-height: 1.5;
+        line-height: 1.2;
     }}
     .sub-title {{
         text-align: center;
         font-size: 14px;
-        margin-top: 0px;
         color: #fbe219;
         font-family: 'Helvetica', sans-serif !important;
     }}
@@ -129,43 +139,32 @@ st.markdown(f"""
     }}
     ::placeholder {{ color: #555555 !important; opacity: 1; }}
     
-    /* --- FILE UPLOADER STYLE (TESTO NERO) --- */
+    /* --- FILE UPLOADER (PULIZIA TOTALE) --- */
     [data-testid="stFileUploader"] {{
         background-color: white !important;
         border: 2px dashed #fbe219;
         border-radius: 10px;
         padding: 20px;
     }}
-    
-    /* TUTTI i testi dentro l'uploader -> NERI (#000000) */
+    /* Testi Neri/Blu Scuro per leggibilità */
     [data-testid="stFileUploader"] section > div, 
     [data-testid="stFileUploader"] small, 
     [data-testid="stFileUploader"] span {{
-        color: #000000 !important; /* NERO ASSOLUTO */
+        color: #0040e8 !important; /* Blu Fritto */
         font-weight: normal !important;
+        font-family: 'Helvetica', sans-serif !important;
     }}
-    /* Nome file caricato */
-    [data-testid="stFileUploaderFile"] div {{
-        color: #000000 !important;
-    }}
+    /* Nome file */
+    [data-testid="stFileUploaderFile"] div {{ color: #000000 !important; }}
     
-    /* Tasto "Browse files" -> BLU */
+    /* Tasto Browse */
     [data-testid="stFileUploader"] button {{
         background-color: #0040e8 !important;
         color: white !important;
         border: none !important;
     }}
     
-    /* ERROR BOX STYLE */
-    .stAlert {{
-        background-color: white !important;
-        color: #ff2b2b !important;
-        border: 2px solid #ff2b2b !important;
-        border-radius: 10px;
-        font-weight: bold;
-    }}
-    
-    /* --- TASTO CREA COVER --- */
+    /* --- BOTTONE "GENERATE" --- */
     div.stButton > button {{
         background-color: #fbe219 !important;
         color: #0040e8 !important;           
@@ -187,23 +186,26 @@ st.markdown(f"""
         transform: translateY(-2px);
         box-shadow: 0px 6px 0px #b8a612 !important;
     }}
-    div.stButton > button:active {{
-        transform: translateY(2px);
-        box-shadow: 0px 0px 0px #b8a612 !important;
-    }}
     div.stButton > button p {{ color: #0040e8 !important; }}
 
-    /* --- FIX BANDIERE (Spazio e Dimensione) --- */
-    [data-testid="column"]:nth-of-type(3) button {{
+    /* --- BOTTONI BANDIERE (SOLO EMOJI) --- */
+    div[data-testid="stHorizontalBlock"]:first-child button {{
         background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0px !important;
-        font-size: 26px !important; 
-        margin-top: 5px !important;
+        min-height: 0px !important;
+        height: auto !important;
+        width: auto !important;
+        font-size: 35px !important; /* Grandezza Emoji */
+        margin: 0px !important;
+        line-height: 1 !important;
     }}
-    [data-testid="column"]:nth-of-type(3) button:hover {{
+    
+    div[data-testid="stHorizontalBlock"]:first-child button:hover {{
+        background-color: transparent !important;
         transform: scale(1.2) !important;
+        border: none !important;
     }}
     
     #MainMenu {{visibility: hidden;}}
@@ -221,20 +223,17 @@ def wrap_text(text, font, max_chars=15):
     import textwrap
     return textwrap.wrap(text, width=max_chars)
 
-# --- 7. HEADER (Layout Anti-Sovrapposizione) ---
-# Colonne: [Logo 1] [Spazio Grande 8] [Bandiere 1]
-c_left, c_center, c_right = st.columns([1, 8, 1])
+# --- 7. HEADER (LAYOUT A DUE RIGHE) ---
 
-with c_left:
+# RIGA 1: LOGO (Sinistra) .................... BANDIERE (Destra)
+top_c1, top_c2, top_c3 = st.columns([2, 6, 2])
+
+with top_c1:
     if os.path.exists(LOGO_PATH):
-        st.image(LOGO_PATH, width=90)
+        st.image(LOGO_PATH, width=80)
 
-with c_center:
-    st.markdown(f"<h1 class='main-title'>{T['title']}</h1>", unsafe_allow_html=True)
-    st.markdown(f"<p class='sub-title'><b>{T['desc']}</b></p>", unsafe_allow_html=True)
-
-with c_right:
-    # Bandiere vicine ma separate
+with top_c3:
+    # Bandiere affiancate
     f1, f2 = st.columns([1, 1])
     with f1:
         if st.button("🇮🇹", key="it_btn"):
@@ -244,6 +243,10 @@ with c_right:
         if st.button("🇬🇧", key="en_btn"):
             st.session_state.lang = 'EN'
             st.rerun()
+
+# RIGA 2: TITOLO (Sotto, al centro, indisturbato)
+st.markdown(f"<h1 class='main-title'>{T['title']}</h1>", unsafe_allow_html=True)
+st.markdown(f"<p class='sub-title'><b>{T['desc']}</b></p>", unsafe_allow_html=True)
 
 st.markdown("---")
 
