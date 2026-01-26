@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_cropper import st_cropper
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 import datetime
 import os
 import io
@@ -102,14 +102,12 @@ st.markdown(f"""
     }}
     
     /* --- FIX BOX INFORMATIVO (st.info) --- */
-    /* Questo risolve il problema della scritta gialla illegibile su sfondo chiaro */
     .stAlert {{
-        color: #0040e8 !important; /* BLU SCURO, non giallo */
-        background-color: #e6f0ff !important; /* Sfondo chiaro standard */
+        color: #0040e8 !important; 
+        background-color: #e6f0ff !important; 
         border: 1px solid #0040e8 !important;
         font-family: 'FrittoBrand', sans-serif !important;
     }}
-    /* Icone dentro gli alert */
     .stAlert div[data-testid="stMarkdownContainer"] p {{
         color: #0040e8 !important;
     }}
@@ -339,7 +337,7 @@ if uploaded_file:
                     
                     final_rgb = canvas.convert("RGB")
                     
-                    st.balloons()
+                    # NIENTE PIÙ PALLONCINI
                     st.image(final_rgb, caption=T['success_caption'], width=400)
                     
                     buf = io.BytesIO()
