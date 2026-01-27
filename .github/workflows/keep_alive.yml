@@ -1,0 +1,26 @@
+name: Fritto Keep Alive
+
+on:
+  schedule:
+    # Esegue il comando ogni 12 ore (alle 8:00 e alle 20:00 circa)
+    - cron: "0 8,20 * * *"
+  workflow_dispatch: # Ti permette di attivarlo a mano se serve
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout del codice
+        uses: actions/checkout@v4
+
+      - name: Configura Git
+        run: |
+          git config --global user.email "bot@fritto.fm"
+          git config --global user.name "Fritto Bot"
+
+      - name: Fai un commit vuoto
+        run: |
+          git commit --allow-empty -m "🍟 Keep-Alive: Sveglia l'app!"
+          git push
