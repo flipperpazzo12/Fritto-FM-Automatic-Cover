@@ -217,9 +217,21 @@ st.markdown(f"""
         border: none !important;
     }}
     
-    #MainMenu {{visibility: hidden;}}
-    footer {{visibility: hidden;}}
-    header {{visibility: hidden;}}
+    /* --- FIX MANAGE APP E OVERLAYS DI STREAMLIT --- */
+    header {{ visibility: hidden !important; display: none !important; }}
+    footer {{ visibility: hidden !important; display: none !important; }}
+    #MainMenu {{ visibility: hidden !important; display: none !important; }}
+    [data-testid="stToolbar"] {{ visibility: hidden !important; display: none !important; }}
+    
+    .viewerBadge_container__1QSob,
+    .viewerBadge_link__1S137,
+    div[class^="viewerBadge"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+    iframe[title="Streamlit cloud viewer badge"] {{
+        display: none !important;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
